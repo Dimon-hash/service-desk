@@ -1,6 +1,7 @@
 package com.example.service_desk.ticket;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ public class TicketService {
         this.ticketRepository = ticketRepository;
     }
 
+    @Transactional
     public Ticket createTicket(long studentId, String description,
                                String location, TicketPriority priority) {
         Ticket ticket = new Ticket(
@@ -34,6 +36,7 @@ public class TicketService {
         return ticketRepository.findAll();
     }
 
+    @Transactional
     public Ticket assignTicket(long ticketId, long specialistId) {
         Ticket ticket = getTicket(ticketId);
         ticket.assignTo(specialistId);
@@ -41,6 +44,7 @@ public class TicketService {
         return ticket;
     }
 
+    @Transactional
     public Ticket startWork(long ticketId) {
         Ticket ticket = getTicket(ticketId);
         ticket.startWork();
@@ -48,6 +52,7 @@ public class TicketService {
         return ticket;
     }
 
+    @Transactional
     public Ticket block(long ticketId, String reason) {
         Ticket ticket = getTicket(ticketId);
         ticket.block(reason);
@@ -55,6 +60,7 @@ public class TicketService {
         return ticket;
     }
 
+    @Transactional
     public Ticket complete(long ticketId) {
         Ticket ticket = getTicket(ticketId);
         ticket.complete();
