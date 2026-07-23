@@ -1,10 +1,9 @@
 package com.example.service_desk.ticket;
 
-import org.springframework.stereotype.Repository;
 
 import java.util.*;
 
-@Repository
+
 public class InMemoryTicketRepository implements TicketRepository {
 
     private final Map<Long,Ticket> tickets = new HashMap<>();

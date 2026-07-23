@@ -1,17 +1,32 @@
 package com.example.service_desk.ticket;
 
+import jakarta.persistence.*;
+
 import java.time.Instant;
 
-
+@Entity
+@Table(name = "tickets")
 public class Ticket {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "student_id", nullable = false)
     private long studentId;
+    @Column(name = "description", nullable = false, length = 2000)
     private String description;
+    @Column(name = "location", nullable = false, length = 255)
     private String location;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 30)
     private TicketStatus status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "priority", nullable = false, length = 30)
     private TicketPriority priority;
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+    @Column(name = "assigned_specialist_id")
     private Long assignedSpecialistId;
+    @Column(name = "failure_reason", length = 1000)
     private String failureReason;
 
     public Ticket(long studentId, String description, String location, TicketPriority priority) {
@@ -21,6 +36,9 @@ public class Ticket {
         this.status = TicketStatus.CREATED;
         this.priority = priority;
         this.createdAt = Instant.now();
+    }
+
+    protected Ticket() {
     }
 
     public Instant getCreatedAt() {
