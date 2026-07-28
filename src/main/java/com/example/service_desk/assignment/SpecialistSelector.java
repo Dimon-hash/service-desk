@@ -1,8 +1,10 @@
 package com.example.service_desk.assignment;
 
 import com.example.service_desk.specialist.Specialist;
+import com.example.service_desk.specialist.SpecialistLevel;
 import com.example.service_desk.specialist.SpecialistStatus;
 import com.example.service_desk.ticket.Ticket;
+import com.example.service_desk.ticket.TicketPriority;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -24,16 +26,18 @@ public class SpecialistSelector {
                 continue;
             }
 
-            if (bestAvailable == null ||
-                    specialist.getLevel().compareTo(bestAvailable.getLevel()) > 0) {
-                bestAvailable = specialist;
-            }
+            bestAvailable = chooseBetterCandidate(
+                    ticket,
+                    specialist,
+                    bestAvailable
+            );
 
             if (Objects.equals(specialist.getLocation(), ticket.getLocation())) {
-                if (bestAtSameLocation == null ||
-                        specialist.getLevel().compareTo(bestAtSameLocation.getLevel()) > 0) {
-                    bestAtSameLocation = specialist;
-                }
+                bestAtSameLocation = chooseBetterCandidate(
+                        ticket,
+                        specialist,
+                        bestAtSameLocation
+                );
 
             }
 
@@ -41,5 +45,38 @@ public class SpecialistSelector {
         if (bestAtSameLocation != null) return Optional.of(bestAtSameLocation);
         return Optional.ofNullable(bestAvailable);
 
+    }
+
+    private Specialist chooseBetterCandidate(Ticket ticket, Specialist candidate, Specialist currentBest) {
+        if (currentBest == null) return candidate;
+        int candidateScore = levelScore(ticket.getPriority(), candidate.getLevel());
+        int currentBestScore = levelScore(ticket.getPriority(), currentBest.getLevel());
+        if (candidateScore > currentBestScore) {
+            return candidate;
+        }
+        return currentBest;
+
+    }
+
+    private int levelScore(TicketPriority priority, SpecialistLevel level) {
+        return switch (priority) {
+            case LOW -> switch (level) {
+                case JUNIOR -> 3;
+                case MIDDLE -> 2;
+                case SENIOR -> 1;
+            };
+
+            case MEDIUM -> switch (level) {
+                case JUNIOR -> 1;
+                case MIDDLE -> 3;
+                case SENIOR -> 2;
+            };
+
+            case HIGH, EMERGENCY -> switch (level) {
+                case JUNIOR -> 1;
+                case MIDDLE -> 2;
+                case SENIOR -> 3;
+            };
+        };
     }
 }
