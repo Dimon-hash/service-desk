@@ -157,4 +157,106 @@ public class SpecialistSelectorTest {
 
 
     }
+
+    @Test
+    void shouldSelectJuniorForLowPriorityTicket() {
+        Ticket ticket = new Ticket(100L,
+                "Не работает проектор",
+                "Корпус 1",
+                TicketPriority.LOW);
+
+        Specialist specialist1 = new Specialist(
+                "Иван",
+                "Корпус 1",
+                SpecialistLevel.JUNIOR
+        );
+        Specialist specialist2 = new Specialist(
+                "Антон",
+                "Корпус 1",
+                SpecialistLevel.SENIOR
+        );
+
+        specialist1.startShift();
+        specialist2.startShift();
+
+        SpecialistSelector selector = new SpecialistSelector();
+
+        Optional<Specialist> selected = selector.select(
+                ticket,
+                List.of(specialist1, specialist2)
+        );
+        assertSame(specialist1, selected.orElseThrow());
+    }
+
+    @Test
+    void shouldSelectMiddleForMediumPriorityTicket(){
+
+        Ticket ticket = new Ticket(100L,
+                "Не работает проектор",
+                "Корпус 1",
+                TicketPriority.MEDIUM);
+
+        Specialist specialist1 = new Specialist(
+                "Иван",
+                "Корпус 1",
+                SpecialistLevel.JUNIOR
+        );
+        Specialist specialist2 = new Specialist(
+                "Антон",
+                "Корпус 1",
+                SpecialistLevel.SENIOR
+        );
+        Specialist specialist3 = new Specialist(
+                "Петр",
+                "Корпус 1",
+                SpecialistLevel.MIDDLE
+        );
+        specialist1.startShift();
+        specialist2.startShift();
+        specialist3.startShift();
+
+        SpecialistSelector selector = new SpecialistSelector();
+
+        Optional<Specialist> selected = selector.select(
+                ticket,
+                List.of(specialist1, specialist2, specialist3)
+        );
+        assertSame(specialist3, selected.orElseThrow());
+
+    }
+
+    @Test
+    void shouldSelectSeniorForEmergencyPriorityTicket(){
+        Ticket ticket = new Ticket(100L,
+                "Не работает проектор",
+                "Корпус 1",
+                TicketPriority.EMERGENCY);
+
+        Specialist specialist1 = new Specialist(
+                "Иван",
+                "Корпус 1",
+                SpecialistLevel.JUNIOR
+        );
+        Specialist specialist2 = new Specialist(
+                "Антон",
+                "Корпус 1",
+                SpecialistLevel.SENIOR
+        );
+        Specialist specialist3 = new Specialist(
+                "Петр",
+                "Корпус 1",
+                SpecialistLevel.MIDDLE
+        );
+        specialist1.startShift();
+        specialist2.startShift();
+        specialist3.startShift();
+
+        SpecialistSelector selector = new SpecialistSelector();
+
+        Optional<Specialist> selected = selector.select(
+                ticket,
+                List.of(specialist1, specialist2, specialist3)
+        );
+        assertSame(specialist2, selected.orElseThrow());
+    }
 }
