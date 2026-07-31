@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-
+import static com.example.service_desk.specialist.SpecialistStatus.AVAILABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -109,4 +109,68 @@ public class AssignmentServiceIntegrationTest {
 
     }
 
+    @Test
+    void blockingAssignedTicketShouldBlockTicketAndReleaseSpecialist() {
+
+        Ticket ticket = ticketService.createTicket(
+                100L,
+                "Не работает проектор",
+                "Корпус 1",
+                TicketPriority.HIGH
+        );
+
+
+        Specialist specialist1 = specialistService.registerSpecialist(
+                "Иван",
+                "Корпус 1",
+                SpecialistLevel.MIDDLE
+        );
+        specialistService.startShift(specialist1.getId());
+
+        assignmentService.assignAutomatically(ticket.getId());
+
+        ticketService.startWork(ticket.getId());
+        Ticket ticket1 = assignmentService.blockAssignedTicket(ticket.getId(), "Необходим другой специалист");
+        Specialist savedSpecialist = specialistService.getSpecialist(specialist1.getId());
+        assertEquals(TicketStatus.BLOCKED, ticket1.getStatus());
+        assertEquals("Необходим другой специалист", ticket1.getFailureReason());
+        assertEquals(AVAILABLE, savedSpecialist.getStatus());
+
+    }
+
+    @Test
+    void blockedTicketShouldBeReassignedToDifferentSpecialist() {
+
+        Ticket ticket = ticketService.createTicket(
+                100L,
+                "Не работает проектор",
+                "Корпус 1",
+                TicketPriority.HIGH
+        );
+
+        Specialist specialist1 = specialistService.registerSpecialist(
+                "Иван",
+                "Корпус 1",
+                SpecialistLevel.SENIOR
+        );
+
+        Specialist specialist2 = specialistService.registerSpecialist(
+                "Антон",
+                "Корпус 1",
+                SpecialistLevel.MIDDLE
+        );
+        specialistService.startShift(specialist1.getId());
+        assignmentService.assignAutomatically(ticket.getId());
+        ticketService.startWork(ticket.getId());
+        assignmentService.blockAssignedTicket(ticket.getId(), "Нет отвертки");
+        specialistService.startShift(specialist2.getId());
+        Ticket ticket1 = assignmentService.assignAutomatically(ticket.getId());
+        assertEquals(TicketStatus.ASSIGNED, ticket1.getStatus());
+        assertEquals(specialist2.getId(), ticket1.getAssignedSpecialistId());
+        assertEquals(AVAILABLE, specialist1.getStatus());
+        assertEquals(SpecialistStatus.BUSY, specialist2.getStatus());
+        assertEquals("Нет отвертки", ticket1.getFailureReason());
+
+
+    }
 }

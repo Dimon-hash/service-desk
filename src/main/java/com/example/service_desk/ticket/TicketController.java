@@ -1,13 +1,11 @@
 package com.example.service_desk.ticket;
 
 import com.example.service_desk.ticket.dto.AssignTicketRequest;
-import com.example.service_desk.ticket.dto.BlockTicketRequest;
 import com.example.service_desk.ticket.dto.CreateTicketRequest;
 import com.example.service_desk.ticket.dto.TicketResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
 
 import java.util.List;
 
@@ -59,13 +57,5 @@ public class TicketController {
         Ticket ticket = ticketService.startWork(ticketId);
         return TicketResponse.from(ticket);
     }
-
-    @PatchMapping("/{ticketId}/block")
-    public TicketResponse block(@PathVariable long ticketId, @Valid @RequestBody BlockTicketRequest request) {
-        Ticket ticket = ticketService.block(ticketId, request.reason());
-        return TicketResponse.from(ticket);
-    }
-
-
 
 }

@@ -2,11 +2,11 @@ package com.example.service_desk.assignment;
 
 
 import com.example.service_desk.ticket.Ticket;
+import com.example.service_desk.ticket.TicketNotFoundException;
+import com.example.service_desk.ticket.dto.BlockTicketRequest;
 import com.example.service_desk.ticket.dto.TicketResponse;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/tickets")
@@ -26,6 +26,12 @@ public class AssignmentController {
     @PatchMapping("/{ticketId}/complete")
     public TicketResponse complete(@PathVariable long ticketId) {
         Ticket ticket = assignmentService.completeAssignedTicket(ticketId);
+        return TicketResponse.from(ticket);
+    }
+
+    @PatchMapping("/{ticketId}/block")
+    public TicketResponse block(@PathVariable long ticketId, @Valid @RequestBody BlockTicketRequest request) {
+        Ticket ticket = assignmentService.blockAssignedTicket(ticketId,request.reason());
         return TicketResponse.from(ticket);
     }
 
