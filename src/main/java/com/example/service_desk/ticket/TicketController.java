@@ -66,10 +66,6 @@ public class TicketController {
         return TicketResponse.from(ticket);
     }
 
-    @PatchMapping("/{ticketId}/complete")
-    public TicketResponse complete(@PathVariable long ticketId) {
-        Ticket ticket = ticketService.complete(ticketId);
-        return TicketResponse.from(ticket);
-    }
+
 
 }

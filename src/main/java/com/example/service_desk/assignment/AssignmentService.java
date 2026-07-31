@@ -1,7 +1,9 @@
 package com.example.service_desk.assignment;
 
 import com.example.service_desk.specialist.Specialist;
+import com.example.service_desk.specialist.SpecialistNotFoundException;
 import com.example.service_desk.specialist.SpecialistRepository;
+import com.example.service_desk.ticket.InvalidTicketStateException;
 import com.example.service_desk.ticket.Ticket;
 import com.example.service_desk.ticket.TicketNotFoundException;
 import com.example.service_desk.ticket.TicketRepository;
@@ -47,7 +49,24 @@ public class AssignmentService {
         ticketRepository.save(ticket);
         return ticket;
 
-
+    }
+    @Transactional
+    public Ticket completeAssignedTicket(long ticketId){
+        Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(
+                ()-> new TicketNotFoundException( "Ticket not found. Id: " + ticketId)
+        );
+        Long id = ticket.getAssignedSpecialistId();
+        if (id == null) {
+            throw new InvalidTicketStateException("Assignment not found. Id: " + ticketId);
+        }
+        Specialist specialist = specialistRepository.findById(id).orElseThrow(
+                ()-> new SpecialistNotFoundException("Assignment not found. Id: " + id)
+        );
+        ticket.complete();
+        specialist.finishWork();
+        ticketRepository.save(ticket);
+        specialistRepository.save(specialist);
+        return ticket;
     }
 
 }
