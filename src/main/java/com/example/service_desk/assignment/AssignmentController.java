@@ -3,6 +3,7 @@ package com.example.service_desk.assignment;
 
 import com.example.service_desk.ticket.Ticket;
 import com.example.service_desk.ticket.TicketNotFoundException;
+import com.example.service_desk.ticket.dto.AssignTicketRequest;
 import com.example.service_desk.ticket.dto.BlockTicketRequest;
 import com.example.service_desk.ticket.dto.TicketResponse;
 import jakarta.validation.Valid;
@@ -34,6 +35,14 @@ public class AssignmentController {
         Ticket ticket = assignmentService.blockAssignedTicket(ticketId,request.reason());
         return TicketResponse.from(ticket);
     }
+
+    @PatchMapping("/{ticketId}/assignment")
+    public TicketResponse assignTicket(@PathVariable long ticketId,
+                                       @Valid @RequestBody AssignTicketRequest request) {
+        Ticket ticket = assignmentService.assignManually(ticketId,request.specialistId());
+        return TicketResponse.from(ticket);
+    }
+
 
 
 }

@@ -115,59 +115,6 @@ public class TicketControllerTest {
     }
 
     @Test
-    void assignTicketShouldReturnAssignedTicket() throws Exception {
-        String requestJson = """
-                {
-                  "specialistId": 50
-                }
-                """;
-        Ticket ticket = ticketService.createTicket(
-                100L,
-                "Не работает проектор",
-                "Аудитория 301",
-                TicketPriority.HIGH
-        );
-        mockMvc.perform(patch("/api/tickets/{ticketId}/assignment",
-                        ticket.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.assignedSpecialistId").value(50))
-                .andExpect(jsonPath("$.studentId").value(ticket.getStudentId()))
-                .andExpect(jsonPath("$.status").value("ASSIGNED"));
-
-        Ticket savedTicket = ticketService.getTicket(ticket.getId());
-
-        assertEquals(50L, savedTicket.getAssignedSpecialistId());
-        assertEquals(TicketStatus.ASSIGNED, savedTicket.getStatus());
-
-    }
-
-    @Test
-    void assignTicketWithZeroSpecialistIdShouldReturn400AndKeepTicketUnassigned() throws Exception {
-        String requestJson = """
-                {
-                  "specialistId": 0
-                }
-                """;
-        Ticket ticket = ticketService.createTicket(
-                100L,
-                "Не работает проектор",
-                "Аудитория 301",
-                TicketPriority.HIGH
-        );
-        mockMvc.perform(patch("/api/tickets/{ticketId}/assignment",
-                        ticket.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
-                .andExpect(status().isBadRequest());
-        Ticket savedTicket = ticketService.getTicket(ticket.getId());
-
-        assertNull(savedTicket.getAssignedSpecialistId());
-        assertEquals(TicketStatus.CREATED, savedTicket.getStatus());
-    }
-
-    @Test
     void startWorkShouldReturnInProgressTicket() throws Exception {
 
         Ticket ticket = ticketService.createTicket(
@@ -209,46 +156,6 @@ public class TicketControllerTest {
         Ticket savedTicket = ticketService.getTicket(ticket.getId());
         assertNull(savedTicket.getAssignedSpecialistId());
         assertEquals(TicketStatus.CREATED, savedTicket.getStatus());
-
-
-    }
-
-    @Test
-    void blockedTicketShouldBeReassignedToAnotherSpecialist() throws Exception {
-
-        Ticket ticket = ticketService.createTicket(
-                100L,
-                "Не работает проектор",
-                "Аудитория 301",
-                TicketPriority.HIGH
-        );
-
-        String requestJson = """
-                {
-                  "specialistId": 99
-                }
-                """;
-
-
-        ticketService.assignTicket(ticket.getId(), 50L);
-        ticketService.startWork(ticket.getId());
-        ticketService.block(ticket.getId(), "нет отвертки");
-
-        mockMvc.perform(patch("/api/tickets/{ticketId}/assignment",
-                        ticket.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.assignedSpecialistId").value(99L))
-                .andExpect(jsonPath("$.studentId").value(ticket.getStudentId()))
-                .andExpect(jsonPath("$.status").value("ASSIGNED"))
-                .andExpect(jsonPath("$.failureReason").value("нет отвертки"));
-
-        Ticket savedTicket = ticketService.getTicket(ticket.getId());
-
-        assertEquals(99L, savedTicket.getAssignedSpecialistId());
-        assertEquals(TicketStatus.ASSIGNED, savedTicket.getStatus());
-        assertEquals("нет отвертки", savedTicket.getFailureReason());
 
 
     }

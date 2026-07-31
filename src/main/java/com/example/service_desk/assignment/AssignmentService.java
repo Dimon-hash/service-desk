@@ -96,6 +96,19 @@ public class AssignmentService {
 
     }
 
+    @Transactional
+    public Ticket assignManually(long ticketId, long specialistId){
+        Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(
+                () -> new TicketNotFoundException("Ticket not found. Id: " + ticketId));
+        Specialist specialist = specialistRepository.findById(specialistId).orElseThrow(
+                () -> new SpecialistNotFoundException("Assignment not found. Id: " + specialistId)
+        );
+        specialist.startWork();
+        ticket.assignTo(specialist.getId());
+        ticketRepository.save(ticket);
+        specialistRepository.save(specialist);
+        return ticket;
+    }
 
 }
 

@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static com.example.service_desk.specialist.SpecialistStatus.AVAILABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -215,7 +216,63 @@ public class AssignmentControllerIntegrationTest {
                 .andExpect(status().isConflict());
         Ticket ticket2 = ticketService.getTicket(ticket.getId());
         assertEquals(TicketStatus.CREATED, ticket2.getStatus());
+    }
 
+    @Test
+    void manualAssignmentShouldMarkSpecialistBusy() throws Exception {
+
+        Ticket ticket = ticketService.createTicket(
+                100L,
+                "Не работает проектор",
+                "Корпус 1",
+                TicketPriority.HIGH
+        );
+
+        Specialist specialist1 = specialistService.registerSpecialist(
+                "Иван",
+                "Корпус 1",
+                SpecialistLevel.SENIOR
+        );
+        specialistService.startShift(specialist1.getId());
+        long id = specialist1.getId();
+        String requestJson = """
+                {
+                  "specialistId": %d
+                }
+                """.formatted(specialist1.getId());
+        mockMvc.perform(patch("/api/tickets/{ticketId}/assignment", ticket.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ASSIGNED"))
+                .andExpect(jsonPath("$.assignedSpecialistId").value(id));
+        Ticket ticket1 = ticketService.getTicket(ticket.getId());
+        assertEquals(TicketStatus.ASSIGNED, ticket1.getStatus());
+        assertEquals(id, ticket1.getAssignedSpecialistId());
+        Specialist savedSpecialist = specialistService.getSpecialist(specialist1.getId());
+        assertEquals(SpecialistStatus.BUSY, savedSpecialist.getStatus());
+    }
+    @Test
+    void manualAssignmentWithZeroSpecialistIdShouldReturn400() throws Exception {
+
+        Ticket ticket = ticketService.createTicket(
+                100L,
+                "Не работает проектор",
+                "Корпус 1",
+                TicketPriority.HIGH
+        );
+        String requestJson = """
+                {
+                  "specialistId": 0
+                }
+                """;
+        mockMvc.perform(patch("/api/tickets/{ticketId}/assignment", ticket.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isBadRequest());
+        Ticket ticket1 = ticketService.getTicket(ticket.getId());
+        assertEquals(TicketStatus.CREATED, ticket1.getStatus());
+        assertNull(ticket1.getAssignedSpecialistId());
 
     }
 }
