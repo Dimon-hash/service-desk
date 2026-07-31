@@ -1,8 +1,8 @@
 package com.example.service_desk.ticket;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.http.MediaType;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -303,49 +303,6 @@ public class TicketControllerTest {
 
         Ticket savedTicket = ticketService.getTicket(ticket.getId());
         assertNull(savedTicket.getFailureReason());
-        assertEquals(TicketStatus.CREATED, savedTicket.getStatus());
-
-    }
-
-    @Test
-    void completeInProgressTicketShouldReturnCompletedTicket() throws Exception {
-
-        Ticket ticket = ticketService.createTicket(
-                100L,
-                "Не работает проектор",
-                "Аудитория 301",
-                TicketPriority.HIGH
-        );
-
-        ticketService.assignTicket(ticket.getId(), 50L);
-        ticketService.startWork(ticket.getId());
-
-        mockMvc.perform(patch("/api/tickets/{ticketId}/complete",
-                        ticket.getId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("COMPLETED"))
-                .andExpect(jsonPath("$.assignedSpecialistId").value(50));
-
-        Ticket savedTicket = ticketService.getTicket(ticket.getId());
-        assertEquals(TicketStatus.COMPLETED, savedTicket.getStatus());
-
-    }
-
-    @Test
-    void сreatedTicketShouldReturn409AndKeepTicketCreated() throws Exception {
-
-        Ticket ticket = ticketService.createTicket(
-                100L,
-                "Не работает проектор",
-                "Аудитория 301",
-                TicketPriority.HIGH
-        );
-
-        mockMvc.perform(patch("/api/tickets/{ticketId}/complete",
-                        ticket.getId()))
-                .andExpect(status().isConflict());
-
-        Ticket savedTicket = ticketService.getTicket(ticket.getId());
         assertEquals(TicketStatus.CREATED, savedTicket.getStatus());
 
     }

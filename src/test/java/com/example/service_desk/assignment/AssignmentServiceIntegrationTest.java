@@ -83,7 +83,29 @@ public class AssignmentServiceIntegrationTest {
         assertEquals(TicketStatus.CREATED, result.getStatus());
         assertNull(result.getAssignedSpecialistId());
         assertEquals(SpecialistStatus.OFF_DUTY, specialist1.getStatus());
+    }
 
+    @Test
+    void completingAssignedTicketShouldCompleteTicketAndReleaseSpecialist(){
+        Ticket ticket = ticketService.createTicket(100L,
+                "Не работает проектор",
+                "Корпус 1",
+                TicketPriority.HIGH);
+
+        Specialist specialist1 = specialistService.registerSpecialist(
+                "Иван",
+                "Корпус 1",
+                SpecialistLevel.MIDDLE
+        );
+        specialistService.startShift(specialist1.getId());
+        assignmentService.assignAutomatically(ticket.getId());
+        ticketService.startWork(ticket.getId());
+        Ticket completed = assignmentService.completeAssignedTicket(ticket.getId());
+        assertEquals(TicketStatus.COMPLETED, completed.getStatus());
+        assertEquals(specialist1.getId(), completed.getAssignedSpecialistId());
+        Specialist savedSpecialist = specialistService.getSpecialist(specialist1.getId());
+
+        assertEquals(SpecialistStatus.AVAILABLE, savedSpecialist.getStatus());
 
     }
 

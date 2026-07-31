@@ -1,6 +1,7 @@
 package com.example.service_desk.assignment;
 
 
+import com.example.service_desk.ticket.Ticket;
 import com.example.service_desk.ticket.dto.TicketResponse;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +21,12 @@ public class AssignmentController {
     public TicketResponse assignTicketAutomatically(@PathVariable long ticketId){
         return  TicketResponse.from(assignmentService.assignAutomatically(ticketId));
 
+    }
+
+    @PatchMapping("/{ticketId}/complete")
+    public TicketResponse complete(@PathVariable long ticketId) {
+        Ticket ticket = assignmentService.completeAssignedTicket(ticketId);
+        return TicketResponse.from(ticket);
     }
 
 
