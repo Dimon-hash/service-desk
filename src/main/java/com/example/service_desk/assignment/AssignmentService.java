@@ -100,13 +100,21 @@ public class AssignmentService {
     public Ticket assignManually(long ticketId, long specialistId){
         Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(
                 () -> new TicketNotFoundException("Ticket not found. Id: " + ticketId));
-        Specialist specialist = specialistRepository.findById(specialistId).orElseThrow(
+
+        Long previousSpecialistId = ticket.getAssignedSpecialistId();
+        Specialist newSpecialist = specialistRepository.findById(specialistId).orElseThrow(
                 () -> new SpecialistNotFoundException("Assignment not found. Id: " + specialistId)
         );
-        specialist.startWork();
-        ticket.assignTo(specialist.getId());
+        if (previousSpecialistId != null && specialistId != previousSpecialistId && ticket.getStatus() == TicketStatus.ASSIGNED) {
+            Specialist previousSpecialist = specialistRepository.findById(previousSpecialistId).orElseThrow(
+                    () -> new SpecialistNotFoundException("Assignment not found. Id: " + previousSpecialistId));
+            previousSpecialist.finishWork();
+            specialistRepository.save(previousSpecialist);
+        }
+        newSpecialist.startWork();
+        ticket.assignTo(newSpecialist.getId());
         ticketRepository.save(ticket);
-        specialistRepository.save(specialist);
+        specialistRepository.save(newSpecialist);
         return ticket;
     }
 
