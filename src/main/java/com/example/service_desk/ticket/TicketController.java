@@ -1,6 +1,5 @@
 package com.example.service_desk.ticket;
 
-import com.example.service_desk.ticket.dto.AssignTicketRequest;
 import com.example.service_desk.ticket.dto.CreateTicketRequest;
 import com.example.service_desk.ticket.dto.TicketResponse;
 import jakarta.validation.Valid;
@@ -45,12 +44,6 @@ public class TicketController {
                 .toList();
     }
 
-    @PatchMapping("/{ticketId}/assignment")
-    public TicketResponse assignTicket(@PathVariable long ticketId,
-                                       @Valid @RequestBody AssignTicketRequest request) {
-        Ticket ticket = ticketService.assignTicket(ticketId, request.specialistId());
-        return TicketResponse.from(ticket);
-    }
 
     @PatchMapping("/{ticketId}/start")
     public TicketResponse startWork(@PathVariable long ticketId) {
