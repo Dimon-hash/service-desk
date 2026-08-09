@@ -2,6 +2,7 @@ package com.example.service_desk.ticket;
 
 import org.junit.jupiter.api.Test;
 
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -179,4 +180,6 @@ class TicketTest {
         assertEquals(reason, ticket.getFailureReason());
 
     }
+
+
 }
