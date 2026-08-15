@@ -1,5 +1,6 @@
 package com.example.service_desk.ticket;
 
+import com.example.service_desk.audit.TicketEventRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -8,6 +9,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -16,11 +18,13 @@ public class TicketControllerTest {
 
     private MockMvc mockMvc;
     private TicketService ticketService;
+    TicketEventRepository ticketEventRepository = mock(TicketEventRepository.class);
 
     @BeforeEach
     void setUp() {
         InMemoryTicketRepository ticketRepository = new InMemoryTicketRepository();
-        ticketService = new TicketService(ticketRepository);
+        ticketService = new TicketService(ticketRepository, ticketEventRepository);
+
         TicketController ticketController = new TicketController(ticketService);
 
         mockMvc = MockMvcBuilders

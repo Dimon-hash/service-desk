@@ -41,4 +41,23 @@ class TicketPersistenceIntegrationTest {
 
 
     }
+
+    @Test
+    void managedTicketShouldBeUpdatedByDirtyChecking() {
+        Ticket created = ticketService.createTicket(
+                100L,
+                "Не работает проектор",
+                "Аудитория 301",
+                TicketPriority.HIGH
+        );
+
+        ticketService.assignTicket(created.getId(), 100L);
+        ticketService.startWork(created.getId());
+        entityManager.flush();
+        entityManager.clear();
+        Ticket updated = ticketService.getTicket(created.getId());
+        assertEquals(TicketStatus.IN_PROGRESS, updated.getStatus());
+
+
+    }
 }
