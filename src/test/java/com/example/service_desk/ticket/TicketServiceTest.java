@@ -8,12 +8,18 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.example.service_desk.audit.TicketEventRepository;
+
+import static org.mockito.Mockito.mock;
 
 public class TicketServiceTest {
+    private final TicketEventRepository ticketEventRepository =
+            mock(TicketEventRepository.class);
+
     @Test
     void newTicketShouldHaveCreatedStatusAndCreationTime() {
         TicketRepository repository = new InMemoryTicketRepository();
-        TicketService ticketService = new TicketService(repository);
+        TicketService ticketService = new TicketService(repository, ticketEventRepository);
         Ticket ticket = ticketService.createTicket(100L,
                 "Не работает проектор",
                 "Аудитория 301",
@@ -30,7 +36,7 @@ public class TicketServiceTest {
     @Test
     void getTicketShouldReturnExistingTicket() {
         TicketRepository repository = new InMemoryTicketRepository();
-        TicketService ticketService = new TicketService(repository);
+        TicketService ticketService = new TicketService(repository, ticketEventRepository);
         Ticket ticket1 = ticketService.createTicket(100L,
                 "Не работает проектор",
                 "Аудитория 301",
@@ -43,7 +49,7 @@ public class TicketServiceTest {
     @Test
     void getTicketShouldThrowWhenTicketDoesNotExist() {
         TicketRepository repository = new InMemoryTicketRepository();
-        TicketService ticketService = new TicketService(repository);
+        TicketService ticketService = new TicketService(repository, ticketEventRepository);
 
         TicketNotFoundException exception = assertThrows(TicketNotFoundException.class,
                 () -> ticketService.getTicket(99L));
@@ -55,7 +61,7 @@ public class TicketServiceTest {
     @Test
     void getAllTicketsShouldReturnAllTickets() {
         TicketRepository repository = new InMemoryTicketRepository();
-        TicketService ticketService = new TicketService(repository);
+        TicketService ticketService = new TicketService(repository, ticketEventRepository);
         Ticket ticket1 = ticketService.createTicket(100L,
                 "Не работает проектор",
                 "Аудитория 301",
@@ -74,7 +80,7 @@ public class TicketServiceTest {
     @Test
     void assignTicketShouldAssignSpecialistAndChangeStatus() {
         TicketRepository repository = new InMemoryTicketRepository();
-        TicketService ticketService = new TicketService(repository);
+        TicketService ticketService = new TicketService(repository, ticketEventRepository);
         Ticket ticket = ticketService.createTicket(100L,
                 "Не работает проектор",
                 "Аудитория 301",
@@ -89,7 +95,7 @@ public class TicketServiceTest {
     @Test
     void startWorkShouldChangeAssignedTicketStatus(){
         TicketRepository repository = new InMemoryTicketRepository();
-        TicketService ticketService = new TicketService(repository);
+        TicketService ticketService = new TicketService(repository, ticketEventRepository);
         Ticket ticket = ticketService.createTicket(100L,
                 "Не работает проектор",
                 "Аудитория 301",
@@ -105,7 +111,7 @@ public class TicketServiceTest {
     @Test
     void blockTicketShouldSaveReasonAndBlockedStatus(){
         TicketRepository repository = new InMemoryTicketRepository();
-        TicketService ticketService = new TicketService(repository);
+        TicketService ticketService = new TicketService(repository, ticketEventRepository);
         Ticket ticket = ticketService.createTicket(100L,
                 "Не работает проектор",
                 "Аудитория 301",
@@ -128,7 +134,7 @@ public class TicketServiceTest {
     @Test
     void completeShouldChangeInProgressStatus() {
         TicketRepository repository = new InMemoryTicketRepository();
-        TicketService ticketService = new TicketService(repository);
+        TicketService ticketService = new TicketService(repository, ticketEventRepository);
         Ticket ticket = ticketService.createTicket(100L,
                 "Не работает проектор",
                 "Аудитория 301",
