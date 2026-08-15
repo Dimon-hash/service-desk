@@ -50,6 +50,9 @@ public class TicketEvent {
         if (actorId != null && actorId <= 0) {
             throw new IllegalArgumentException("actorId must be greater than 0");
         }
+        if (eventType == null) {
+            throw new IllegalArgumentException("eventType must not be null");
+        }
 
         this.ticketId = ticketId;
         this.eventType = eventType;

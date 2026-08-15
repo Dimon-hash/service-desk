@@ -1,6 +1,5 @@
 package com.example.service_desk.audit;
 
-import com.example.service_desk.ticket.Ticket;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -54,6 +53,18 @@ public class TicketEventTest {
                 AuditActorType.SYSTEM,
                 50L,
                 null
+        ));
+
+    }
+
+    @Test
+    void nullEventTypeShouldBeRejected() {
+        assertThrows(IllegalArgumentException.class, () -> new TicketEvent(
+                15,
+                null,
+                AuditActorType.STUDENT,
+                50L,
+                "!223"
         ));
 
     }
