@@ -9,6 +9,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -44,6 +46,8 @@ public class SpecialistControllerIntegrationTest {
 
 
         mockMvc.perform(post("/api/specialists")
+                        .with(csrf())
+                        .with(user("admin").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isCreated())
@@ -70,9 +74,33 @@ public class SpecialistControllerIntegrationTest {
 
 
         mockMvc.perform(post("/api/specialists")
+                        .with(csrf())
+                        .with(user("admin").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isBadRequest());
+        assertEquals(size, specialistRepository.findAll().size());
+
+    }
+
+    @Test
+    void studentShouldNotRegisterSpecialist() throws Exception {
+        String requestJson = """
+                {
+                  "fullName": "Иван Петров",
+                  "location": "Корпус 1",
+                  "level": "MIDDLE"
+                }
+                """;
+
+        int size = specialistRepository.findAll().size();
+
+        mockMvc.perform(post("/api/specialists")
+                        .with(csrf())
+                        .with(user("student").roles("STUDENT"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isForbidden());
         assertEquals(size, specialistRepository.findAll().size());
 
     }
@@ -85,7 +113,8 @@ public class SpecialistControllerIntegrationTest {
                 SpecialistLevel.MIDDLE
         );
 
-        mockMvc.perform(get("/api/specialists/{specialistId}", specialist.getId()))
+        mockMvc.perform(get("/api/specialists/{specialistId}", specialist.getId())
+                        .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(specialist.getId()))
                 .andExpect(jsonPath("$.fullName").value("Иван Петров"))
@@ -99,7 +128,8 @@ public class SpecialistControllerIntegrationTest {
     @Test
     void getMissingSpecialistShouldReturn404() throws Exception {
 
-        mockMvc.perform(get("/api/specialists/{specialistId}", Long.MAX_VALUE))
+        mockMvc.perform(get("/api/specialists/{specialistId}", Long.MAX_VALUE)
+                        .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNotFound());
 
     }
@@ -117,7 +147,8 @@ public class SpecialistControllerIntegrationTest {
                 "Корпус 1",
                 SpecialistLevel.MIDDLE
         );
-        mockMvc.perform(get("/api/specialists"))
+        mockMvc.perform(get("/api/specialists")
+                        .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(size + 2));
@@ -133,7 +164,9 @@ public class SpecialistControllerIntegrationTest {
                 SpecialistLevel.MIDDLE
         );
         assertEquals(SpecialistStatus.OFF_DUTY, specialist.getStatus());
-        mockMvc.perform(patch("/api/specialists/{specialistId}/shift/start", specialist.getId()))
+        mockMvc.perform(patch("/api/specialists/{specialistId}/shift/start", specialist.getId())
+                        .with(csrf())
+                        .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(specialist.getId()))
                 .andExpect(jsonPath("$.status").value("AVAILABLE"));
@@ -155,7 +188,9 @@ public class SpecialistControllerIntegrationTest {
         );
         specialistService.startShift(specialist.getId());
         assertEquals(SpecialistStatus.AVAILABLE, specialist.getStatus());
-        mockMvc.perform(patch("/api/specialists/{specialistId}/shift/finish", specialist.getId()))
+        mockMvc.perform(patch("/api/specialists/{specialistId}/shift/finish", specialist.getId())
+                        .with(csrf())
+                        .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(specialist.getId()))
                 .andExpect(jsonPath("$.status").value("OFF_DUTY"));
@@ -177,7 +212,9 @@ public class SpecialistControllerIntegrationTest {
                 SpecialistLevel.MIDDLE
         );
         specialistService.startShift(specialist.getId());
-        mockMvc.perform(patch("/api/specialists/{specialistId}/shift/start", specialist.getId()))
+        mockMvc.perform(patch("/api/specialists/{specialistId}/shift/start", specialist.getId())
+                        .with(csrf())
+                        .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isConflict());
 
     }

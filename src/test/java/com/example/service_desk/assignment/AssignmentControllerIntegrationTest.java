@@ -19,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import static com.example.service_desk.specialist.SpecialistStatus.AVAILABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -53,7 +55,9 @@ public class AssignmentControllerIntegrationTest {
                 SpecialistLevel.MIDDLE
         );
         specialistService.startShift(specialist1.getId());
-        mockMvc.perform(patch("/api/tickets/{ticketId}/automatic-assignment", ticket.getId()))
+        mockMvc.perform(patch("/api/tickets/{ticketId}/automatic-assignment", ticket.getId())
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.assignedSpecialistId").value(specialist1.getId()))
                 .andExpect(jsonPath("$.status").value("ASSIGNED"))
@@ -68,7 +72,9 @@ public class AssignmentControllerIntegrationTest {
                 "Корпус 1",
                 TicketPriority.HIGH
         );
-        mockMvc.perform(patch("/api/tickets/{ticketId}/automatic-assignment", ticket.getId()))
+        mockMvc.perform(patch("/api/tickets/{ticketId}/automatic-assignment", ticket.getId())
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.assignedSpecialistId").isEmpty())
                 .andExpect(jsonPath("$.status").value("CREATED"));
@@ -92,13 +98,17 @@ public class AssignmentControllerIntegrationTest {
                 SpecialistLevel.MIDDLE
         );
         specialistService.startShift(specialist1.getId());
-        mockMvc.perform(patch("/api/tickets/{ticketId}/automatic-assignment", ticket.getId()))
+        mockMvc.perform(patch("/api/tickets/{ticketId}/automatic-assignment", ticket.getId())
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ASSIGNED"));
 
         ticketService.startWork(ticket.getId());
 
-        mockMvc.perform(patch("/api/tickets/{ticketId}/complete", ticket.getId()))
+        mockMvc.perform(patch("/api/tickets/{ticketId}/complete", ticket.getId())
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"));
         Specialist specialist2 = specialistService.getSpecialist(specialist1.getId());
@@ -113,7 +123,9 @@ public class AssignmentControllerIntegrationTest {
                 "Корпус 1",
                 TicketPriority.HIGH
         );
-        mockMvc.perform(patch("/api/tickets/{ticketId}/complete", ticket.getId()))
+        mockMvc.perform(patch("/api/tickets/{ticketId}/complete", ticket.getId())
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isConflict());
         Ticket ticket1 = ticketService.getTicket(ticket.getId());
         assertEquals(TicketStatus.CREATED, ticket1.getStatus());
@@ -136,7 +148,9 @@ public class AssignmentControllerIntegrationTest {
                 SpecialistLevel.SENIOR
         );
         specialistService.startShift(specialist1.getId());
-        mockMvc.perform(patch("/api/tickets/{ticketId}/automatic-assignment", ticket.getId()))
+        mockMvc.perform(patch("/api/tickets/{ticketId}/automatic-assignment", ticket.getId())
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ASSIGNED"));
         ticketService.startWork(ticket.getId());
@@ -147,7 +161,9 @@ public class AssignmentControllerIntegrationTest {
                 """;
         mockMvc.perform(patch("/api/tickets/{ticketId}/block", ticket.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
+                        .content(requestJson)
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("BLOCKED"))
                 .andExpect(jsonPath("$.failureReason").value("Нет отвертки"));
@@ -171,7 +187,9 @@ public class AssignmentControllerIntegrationTest {
                 SpecialistLevel.SENIOR
         );
         specialistService.startShift(specialist1.getId());
-        mockMvc.perform(patch("/api/tickets/{ticketId}/automatic-assignment", ticket.getId()))
+        mockMvc.perform(patch("/api/tickets/{ticketId}/automatic-assignment", ticket.getId())
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ASSIGNED"));
         ticketService.startWork(ticket.getId());
@@ -182,7 +200,9 @@ public class AssignmentControllerIntegrationTest {
                 """;
         mockMvc.perform(patch("/api/tickets/{ticketId}/block", ticket.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
+                        .content(requestJson)
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isBadRequest());
         Specialist specialist = specialistService.getSpecialist(specialist1.getId());
         Ticket ticket2 = ticketService.getTicket(ticket.getId());
@@ -212,7 +232,9 @@ public class AssignmentControllerIntegrationTest {
                 """;
         mockMvc.perform(patch("/api/tickets/{ticketId}/block", ticket.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
+                        .content(requestJson)
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isConflict());
         Ticket ticket2 = ticketService.getTicket(ticket.getId());
         assertEquals(TicketStatus.CREATED, ticket2.getStatus());
@@ -242,7 +264,9 @@ public class AssignmentControllerIntegrationTest {
                 """.formatted(specialist1.getId());
         mockMvc.perform(patch("/api/tickets/{ticketId}/assignment", ticket.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
+                        .content(requestJson)
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ASSIGNED"))
                 .andExpect(jsonPath("$.assignedSpecialistId").value(id));
@@ -268,7 +292,9 @@ public class AssignmentControllerIntegrationTest {
                 """;
         mockMvc.perform(patch("/api/tickets/{ticketId}/assignment", ticket.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
+                        .content(requestJson)
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isBadRequest());
         Ticket ticket1 = ticketService.getTicket(ticket.getId());
         assertEquals(TicketStatus.CREATED, ticket1.getStatus());
@@ -306,7 +332,9 @@ public class AssignmentControllerIntegrationTest {
                 """.formatted(id1);
         mockMvc.perform(patch("/api/tickets/{ticketId}/assignment", ticket.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
+                        .content(requestJson)
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isOk());
         long id2 = specialist2.getId();
         requestJson = """
@@ -316,7 +344,9 @@ public class AssignmentControllerIntegrationTest {
                 """.formatted(id2);
         mockMvc.perform(patch("/api/tickets/{ticketId}/assignment", ticket.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
+                        .content(requestJson)
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isOk());
         Ticket ticket1 = ticketService.getTicket(ticket.getId());
         Specialist savedSpecialist1 = specialistService.getSpecialist(specialist1.getId());
@@ -356,7 +386,9 @@ public class AssignmentControllerIntegrationTest {
                 """.formatted(id1);
         mockMvc.perform(patch("/api/tickets/{ticketId}/assignment", ticket.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
+                        .content(requestJson)
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isOk());
         ticketService.startWork(ticket.getId());
         requestJson = """
@@ -366,7 +398,9 @@ public class AssignmentControllerIntegrationTest {
                 """;
         mockMvc.perform(patch("/api/tickets/{ticketId}/block", ticket.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
+                        .content(requestJson)
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isOk());
         long id2 = specialist2.getId();
         requestJson = """
@@ -376,7 +410,9 @@ public class AssignmentControllerIntegrationTest {
                 """.formatted(id2);
         mockMvc.perform(patch("/api/tickets/{ticketId}/assignment", ticket.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
+                        .content(requestJson)
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
                 .andExpect(status().isOk());
         Ticket ticket1 = ticketService.getTicket(ticket.getId());
         Specialist savedSpecialist1 = specialistService.getSpecialist(specialist1.getId());
