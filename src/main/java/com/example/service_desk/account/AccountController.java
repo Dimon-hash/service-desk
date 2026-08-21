@@ -4,6 +4,8 @@ import com.example.service_desk.account.dto.AccountResponse;
 import com.example.service_desk.account.dto.RegisterAccountRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +30,13 @@ public class AccountController {
                 registerAccountRequest.login(),
                 registerAccountRequest.password()
         );
+        return AccountResponse.from(userAccount);
+    }
+
+    @GetMapping("/me")
+    public AccountResponse me(Authentication authentication) {
+        String username = authentication.getName();
+        UserAccount userAccount = accountService.getByLogin(username);
         return AccountResponse.from(userAccount);
     }
 }
