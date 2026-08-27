@@ -1,9 +1,12 @@
 package com.example.service_desk.ticket;
 
+import com.example.service_desk.account.AccountService;
+import com.example.service_desk.account.UserAccount;
 import com.example.service_desk.ticket.dto.CreateTicketRequest;
 import com.example.service_desk.ticket.dto.TicketResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,20 +15,26 @@ import java.util.List;
 @RequestMapping("/api/tickets")
 public class TicketController {
     private final TicketService ticketService;
+    private final AccountService accountService;
 
-    public TicketController(TicketService ticketService) {
+    public TicketController(TicketService ticketService, AccountService accountService) {
         this.ticketService = ticketService;
+        this.accountService = accountService;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TicketResponse createTicket(
-            @Valid @RequestBody CreateTicketRequest request
+            @Valid @RequestBody CreateTicketRequest request, Authentication authentication
     ) {
-        Ticket ticket = ticketService.createTicket(request.studentId(),
+        String login = authentication.getName();
+        UserAccount userAccount = accountService.getByLogin(login);
+        Ticket ticket = ticketService.createTicket(
+                userAccount.getId(),
                 request.description(),
                 request.location(),
-                request.priority());
+                request.priority()
+        );
         return TicketResponse.from(ticket);
     }
 

@@ -1,15 +1,20 @@
 package com.example.service_desk.ticket;
 
+import com.example.service_desk.account.AccountService;
+import com.example.service_desk.account.UserAccount;
 import com.example.service_desk.audit.TicketEventRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -18,15 +23,15 @@ public class TicketControllerTest {
 
     private MockMvc mockMvc;
     private TicketService ticketService;
+    private AccountService accountService;
     TicketEventRepository ticketEventRepository = mock(TicketEventRepository.class);
 
     @BeforeEach
     void setUp() {
         InMemoryTicketRepository ticketRepository = new InMemoryTicketRepository();
         ticketService = new TicketService(ticketRepository, ticketEventRepository);
-
-        TicketController ticketController = new TicketController(ticketService);
-
+        accountService = mock(AccountService.class);
+        TicketController ticketController = new TicketController(ticketService, accountService);
         mockMvc = MockMvcBuilders
                 .standaloneSetup(ticketController)
                 .build();
@@ -64,14 +69,23 @@ public class TicketControllerTest {
 
         String requestJson = """
                 {
-                  "studentId": 100,
                   "description": "Не работает проектор",
                   "location": "Аудитория 301",
                   "priority": "HIGH"
                 }
                 """;
+        UserAccount account = mock(UserAccount.class);
+
+        when(accountService.getByLogin("dima2"))
+                .thenReturn(account);
+        when(account.getId())
+                .thenReturn(100L);
+
+        Authentication authentication =
+                new UsernamePasswordAuthenticationToken("dima2", null);
 
         mockMvc.perform(post("/api/tickets")
+                        .principal(authentication)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isCreated())
