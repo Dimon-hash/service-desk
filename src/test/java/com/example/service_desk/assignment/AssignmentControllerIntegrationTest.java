@@ -303,8 +303,7 @@ public class AssignmentControllerIntegrationTest {
     }
 
     @Test
-    void manualReassignmentShouldReleasePreviousSpecialist() throws Exception {
-
+    void assignedTicketShouldRejectManualReassignment() throws Exception {
         Ticket ticket = ticketService.createTicket(
                 100L,
                 "Не работает проектор",
@@ -312,48 +311,73 @@ public class AssignmentControllerIntegrationTest {
                 TicketPriority.HIGH
         );
 
-        Specialist specialist1 = specialistService.registerSpecialist(
+        Specialist firstSpecialist = specialistService.registerSpecialist(
                 "Иван",
                 "Корпус 1",
                 SpecialistLevel.SENIOR
         );
-        Specialist specialist2 = specialistService.registerSpecialist(
+
+        Specialist secondSpecialist = specialistService.registerSpecialist(
                 "Антон",
                 "Корпус 1",
                 SpecialistLevel.SENIOR
         );
-        specialistService.startShift(specialist1.getId());
-        specialistService.startShift(specialist2.getId());
-        long id1 = specialist1.getId();
-        String requestJson = """
-                {
-                  "specialistId": %d
-                }
-                """.formatted(id1);
-        mockMvc.perform(patch("/api/tickets/{ticketId}/assignment", ticket.getId())
+
+        specialistService.startShift(firstSpecialist.getId());
+        specialistService.startShift(secondSpecialist.getId());
+
+        String firstAssignmentJson = """
+            {
+              "specialistId": %d
+            }
+            """.formatted(firstSpecialist.getId());
+
+        mockMvc.perform(patch(
+                        "/api/tickets/{ticketId}/assignment",
+                        ticket.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson)
+                        .content(firstAssignmentJson)
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
-                .andExpect(status().isOk());
-        long id2 = specialist2.getId();
-        requestJson = """
-                {
-                  "specialistId": %d
-                }
-                """.formatted(id2);
-        mockMvc.perform(patch("/api/tickets/{ticketId}/assignment", ticket.getId())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ASSIGNED"))
+                .andExpect(jsonPath("$.assignedSpecialistId")
+                        .value(firstSpecialist.getId()));
+
+        String secondAssignmentJson = """
+            {
+              "specialistId": %d
+            }
+            """.formatted(secondSpecialist.getId());
+
+        mockMvc.perform(patch(
+                        "/api/tickets/{ticketId}/assignment",
+                        ticket.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson)
+                        .content(secondAssignmentJson)
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
-                .andExpect(status().isOk());
-        Ticket ticket1 = ticketService.getTicket(ticket.getId());
-        Specialist savedSpecialist1 = specialistService.getSpecialist(specialist1.getId());
-        Specialist savedSpecialist2 = specialistService.getSpecialist(specialist2.getId());
-        assertEquals(savedSpecialist2.getId(), ticket1.getAssignedSpecialistId());
-        assertEquals(SpecialistStatus.BUSY, savedSpecialist2.getStatus());
-        assertEquals(AVAILABLE, savedSpecialist1.getStatus());
+                .andExpect(status().isConflict());
+
+        Ticket savedTicket = ticketService.getTicket(ticket.getId());
+
+        Specialist savedFirstSpecialist = specialistService.getSpecialist(firstSpecialist.getId());
+
+        Specialist savedSecondSpecialist = specialistService.getSpecialist(secondSpecialist.getId());
+
+        assertEquals(
+                firstSpecialist.getId(),
+                savedTicket.getAssignedSpecialistId()
+        );
+        assertEquals(TicketStatus.ASSIGNED, savedTicket.getStatus());
+        assertEquals(
+                SpecialistStatus.BUSY,
+                savedFirstSpecialist.getStatus()
+        );
+        assertEquals(
+                SpecialistStatus.AVAILABLE,
+                savedSecondSpecialist.getStatus()
+        );
     }
 
     @Test

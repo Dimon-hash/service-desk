@@ -3,7 +3,6 @@ package com.example.service_desk.ticket;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TicketTest {
     @Test
@@ -178,5 +177,16 @@ class TicketTest {
         assertEquals(99L, ticket.getAssignedSpecialistId());
         assertEquals(reason, ticket.getFailureReason());
 
+    }
+    @Test
+    void assignedTicketShouldNotBeAssignedAgain(){
+        Ticket ticket = new Ticket(100L,
+                "Не работает проектор",
+                "Аудитория 301",
+                TicketPriority.HIGH);
+        ticket.assignTo(50L);
+        assertThrows(InvalidTicketStateException.class,()-> ticket.assignTo(60L));
+        assertEquals(50L ,ticket.getAssignedSpecialistId());
+        assertEquals(TicketStatus.ASSIGNED, ticket.getStatus());
     }
 }
