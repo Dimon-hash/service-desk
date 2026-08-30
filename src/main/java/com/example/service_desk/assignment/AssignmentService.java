@@ -1,5 +1,9 @@
 package com.example.service_desk.assignment;
 
+import com.example.service_desk.audit.AuditActorType;
+import com.example.service_desk.audit.TicketEvent;
+import com.example.service_desk.audit.TicketEventRepository;
+import com.example.service_desk.audit.TicketEventType;
 import com.example.service_desk.specialist.Specialist;
 import com.example.service_desk.specialist.SpecialistNotFoundException;
 import com.example.service_desk.specialist.SpecialistRepository;
@@ -19,11 +23,16 @@ public class AssignmentService {
     private final TicketRepository ticketRepository;
     private final SpecialistRepository specialistRepository;
     private final SpecialistSelector specialistSelector;
+    private final TicketEventRepository ticketEventRepository;
 
-    public AssignmentService(TicketRepository ticketRepository, SpecialistRepository specialistRepository, SpecialistSelector specialistSelector) {
+    public AssignmentService(TicketRepository ticketRepository,
+                             SpecialistRepository specialistRepository,
+                             SpecialistSelector specialistSelector,
+                             TicketEventRepository ticketEventRepository) {
         this.ticketRepository = ticketRepository;
         this.specialistRepository = specialistRepository;
         this.specialistSelector = specialistSelector;
+        this.ticketEventRepository = ticketEventRepository;
     }
 
     @Transactional
@@ -104,10 +113,16 @@ public class AssignmentService {
         Specialist newSpecialist = specialistRepository.findById(specialistId).orElseThrow(
                 () -> new SpecialistNotFoundException("Assignment not found. Id: " + specialistId)
         );
+
         ticket.assignTo(newSpecialist.getId());
         newSpecialist.startWork();
-        ticketRepository.save(ticket);
-        specialistRepository.save(newSpecialist);
+
+        TicketEvent newTicketEvent = new TicketEvent(ticketId,
+                TicketEventType.ASSIGNED,
+                AuditActorType.SYSTEM,
+                null, "");
+        ticketEventRepository.save(newTicketEvent);
+
         return ticket;
     }
 
