@@ -73,4 +73,23 @@ class TicketOwnershipIntegrationTest {
                         .content(requestJson))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void unauthenticatedUserShouldNotCreateTicket() throws Exception {
+
+        String requestJson = """
+                {
+                  "description": "Не работает компьютер",
+                  "location": "Аудитория 301",
+                  "priority": "HIGH"
+                }
+                """;
+
+        mockMvc.perform(post("/api/tickets")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isUnauthorized());
+
+    }
 }
