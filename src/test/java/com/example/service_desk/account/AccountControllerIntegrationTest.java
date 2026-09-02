@@ -1,16 +1,21 @@
 package com.example.service_desk.account;
 
+import org.apache.coyote.AbstractProcessor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -126,5 +131,50 @@ public class AccountControllerIntegrationTest {
     void unauthenticatedUserShouldNotAccessOwnAccount() throws Exception {
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void restLoginShouldCreateSessionAndAuthorizeFollowingRequest() throws Exception {
+        accountService.register("dima2", "strong-password-123");
+        String requestJson = """
+                {
+                  "login": "dima2",
+                    "password": "strong-password-123"
+                }
+                """;
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson)
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession(false);
+
+        assertNotNull(session);
+        mockMvc.perform(get("/api/auth/me")
+                        .session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.login").value("dima2"))
+                .andExpect(jsonPath("$.role").value(UserRole.STUDENT.name()));
+
+    }
+
+    @Test
+    void restLoginWithWrongPasswordShouldReturn401() throws Exception {
+        accountService.register("dima2", "strong-password-123");
+        String requestJson = """
+                {
+                  "login": "dima2",
+                    "password": "strong-password-123!"
+                }
+                """;
+       mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson)
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(unauthenticated());
+
     }
 }
