@@ -13,11 +13,15 @@ import java.util.List;
 public class TicketService {
     private final TicketRepository ticketRepository;
     private final TicketEventRepository ticketEventRepository;
+    private final TicketAuthorizationService ticketAuthorizationService;
 
 
-    public TicketService(TicketRepository ticketRepository, TicketEventRepository ticketEventRepository) {
+    public TicketService(TicketRepository ticketRepository,
+                         TicketEventRepository ticketEventRepository,
+                         TicketAuthorizationService ticketAuthorizationService) {
         this.ticketRepository = ticketRepository;
         this.ticketEventRepository = ticketEventRepository;
+        this.ticketAuthorizationService = ticketAuthorizationService;
     }
 
 
@@ -52,6 +56,12 @@ public class TicketService {
 
     public List<Ticket> getAllTickets() {
         return ticketRepository.findAll();
+    }
+
+    public Ticket getTicketForViewing(long ticketId, String login) {
+        Ticket ticket = getTicket(ticketId);
+        ticketAuthorizationService.checkCanView(login, ticket);
+        return ticket;
     }
 
     @Transactional

@@ -25,11 +25,12 @@ public class TicketControllerTest {
     private TicketService ticketService;
     private AccountService accountService;
     TicketEventRepository ticketEventRepository = mock(TicketEventRepository.class);
+    private TicketAuthorizationService ticketAuthorizationService = mock(TicketAuthorizationService.class);
 
     @BeforeEach
     void setUp() {
         InMemoryTicketRepository ticketRepository = new InMemoryTicketRepository();
-        ticketService = new TicketService(ticketRepository, ticketEventRepository);
+        ticketService = new TicketService(ticketRepository, ticketEventRepository, ticketAuthorizationService);
         accountService = mock(AccountService.class);
         TicketController ticketController = new TicketController(ticketService, accountService);
         mockMvc = MockMvcBuilders
@@ -55,8 +56,9 @@ public class TicketControllerTest {
                 "Аудитория 301",
                 TicketPriority.HIGH
         );
+        Authentication authentication = new UsernamePasswordAuthenticationToken("dima2", null);
 
-        mockMvc.perform(get("/api/tickets/{ticketId}", ticket.getId()))
+        mockMvc.perform(get("/api/tickets/{ticketId}", ticket.getId()).principal(authentication))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(ticket.getId()))
                 .andExpect(jsonPath("$.description").value("Не работает проектор"))
@@ -81,8 +83,7 @@ public class TicketControllerTest {
         when(account.getId())
                 .thenReturn(100L);
 
-        Authentication authentication =
-                new UsernamePasswordAuthenticationToken("dima2", null);
+        Authentication authentication = new UsernamePasswordAuthenticationToken("dima2", null);
 
         mockMvc.perform(post("/api/tickets")
                         .principal(authentication)
@@ -126,8 +127,10 @@ public class TicketControllerTest {
 
     @Test
     void getMissingTicketShouldReturn404() throws Exception {
+        Authentication authentication = new UsernamePasswordAuthenticationToken("dima2", null);
 
-        mockMvc.perform(get("/api/tickets/{ticketId}", 999))
+        mockMvc.perform(get("/api/tickets/{ticketId}", 999)
+                        .principal(authentication))
                 .andExpect(status().isNotFound());
 
     }

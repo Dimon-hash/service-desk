@@ -40,8 +40,12 @@ public class TicketController {
 
 
     @GetMapping("/{ticketId}")
-    public TicketResponse getTicket(@PathVariable long ticketId) {
-        Ticket ticket = ticketService.getTicket(ticketId);
+    public TicketResponse getTicket(@PathVariable long ticketId,
+                                    Authentication authentication) {
+        Ticket ticket = ticketService.getTicketForViewing(
+                ticketId,
+                authentication.getName()
+        );
         return TicketResponse.from(ticket);
     }
 
